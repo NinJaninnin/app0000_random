@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랜덤 뽑기판 - 방송용 웹앱 v2 (고도화)</title>
+    <link rel="stylesheet" href="style.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9091337530987580"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- [세팅 패널] - 스트리머 조작용 -->
+        <aside class="settings-panel">
+            <h2>설정 패널 (v2)</h2>
+
+            <div class="setting-group">
+                <h3>1. 뽑기판 크기</h3>
+                <div class="radio-group">
+                    <label><input type="radio" name="boardSize" value="25" checked> 25칸 (5x5)</label>
+                    <label><input type="radio" name="boardSize" value="50"> 50칸 (10x5)</label>
+                    <label><input type="radio" name="boardSize" value="100"> 100칸 (10x10)</label>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <h3>2. 상품 목록 설정</h3>
+                <p class="help-text">나머지 빈칸은 '꽝'으로 자동 채워집니다.</p>
+                <div id="prize-list-container">
+                    <!-- 기본 1개의 입력 폼 -->
+                    <div class="prize-row">
+                        <input type="text" class="prize-name" placeholder="상품명 (예: 치킨 기프티콘)">
+                        <input type="number" class="prize-count" placeholder="수량" min="1" value="1">
+                        <button class="btn-remove" onclick="removePrizeRow(this)">X</button>
+                    </div>
+                </div>
+                <button class="btn-add" id="btn-add-prize">+ 상품 추가하기</button>
+            </div>
+
+            <div class="setting-group">
+                <h3>3. 배경 이미지 (선택)</h3>
+                <div class="bg-thumbnails">
+                    <div class="bg-thumb active" data-bg="img/bg_0000.webp">bg_0000</div>
+                    <div class="bg-thumb" data-bg="img/bg_0001.webp">bg_0001</div>
+                    <div class="bg-thumb" data-bg="img/bg_0002.webp">bg_0002</div>
+                    <div class="bg-thumb" data-bg="img/bg_0003.webp">bg_0003</div>
+                    <div class="bg-thumb" data-bg="img/bg_0004.webp">bg_0004</div>
+                    <div class="bg-thumb" data-bg="none">초기화</div>
+                </div>
+                <p class="help-text" style="margin-top:5px; font-size:11px;">※ img 폴더 내 배경 (bg_000x.webp) 파일을 불러옵니다.</p>
+            </div>
+
+            <!-- 새로 추가된 [박스 이미지 커스텀 탭] -->
+            <div class="setting-group">
+                <h3>4. 박스 이미지 (선택)</h3>
+                <div class="box-thumbnails">
+                    <!-- 이미지는 img/box_0000.png ~ img/box_0004.png 기준 -->
+                    <div class="box-thumb" data-box="img/box_0000.png">box_0000</div>
+                    <div class="box-thumb" data-box="img/box_0001.png">box_0001</div>
+                    <div class="box-thumb" data-box="img/box_0002.png">box_0002</div>
+                    <div class="box-thumb" data-box="img/box_0003.png">box_0003</div>
+                    <div class="box-thumb" data-box="img/box_0004.png">box_0004</div>
+                    <div class="box-thumb active" data-box="none">기본 회색</div>
+                </div>
+                <p class="help-text" style="margin-top:5px; font-size:11px;">※ img 폴더 내 박스 (box_000x.png) 파일을 불러옵니다.</p>
+            </div>
+
+            <div class="setting-actions">
+                <button id="btn-apply" class="btn-primary">설정 완료 및 섞기</button>
+                <button id="btn-reset" class="btn-secondary">판 초기화</button>
+            </div>
+        </aside>
+
+        <!-- [방송 송출 화면] - 메인 뽑기 영역 -->
+        <main class="broadcast-panel" id="broadcast-panel">
+            <!-- 상태 현황판 -->
+            <header class="status-board">
+                <div class="status-title">🎁 남은 상품 현황</div>
+                <div id="status-list" class="status-list">
+                    <!-- Javascript가 동적으로 채워줌 -->
+                    <span class="status-empty">설정을 완료해주세요.</span>
+                </div>
+            </header>
+
+            <!-- 뽑기판 타일 영역 -->
+            <section class="board-container">
+                <div id="board" class="board">
+                    <!-- Javascript가 동적으로 타일을 생성함 -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- [전면 동영상 광고 모달] 
+         10번 뽑기마다 결과가 나오기 전에 15초간 표출되는 광고 동영상 영역입니다. -->
+    <div id="ad-modal" class="interstitial-overlay hidden">
+        <!-- 동영상 파일 소스는 img/ad.mp4 로 지정 -->
+        <!-- 컨트롤러는 숨기고 음소거 풀기 원하면 muted를 지우거나 조작(크롬 자동재생 정책상 muted 권장) -->
+        <video id="ad-video" src="img/ad.mp4" controlsList="nodownload" playsinline muted></video>
+        <!-- 테스트 또는 비상용 건너뛰기 버튼 (보통 실제 광고 시스템에선 몇초 후 등장) -->
+        <button id="btn-skip-ad" class="btn-skip-ad">광고 닫기 (Skip)</button>
+    </div>
+
+    <!-- 
+      ====================================================================
+      [구글 애드센스 삽입 안내]
+      해당 <footer id="adsense-container"> 안에 구글 애드센스에서 발급받은 
+      <script> 및 <ins> 코드를 붙여넣어 주세요. 
+      권장 단위: 디스플레이 광고 (가로 970px * 세로 90px 크기 고정)
+      아래 스크립트 예시는 지우고 실제 코드로 교체하시면 됩니다.
+      ====================================================================
+    -->
+    <footer id="adsense-container" class="adsense-container">
+        <!-- 여기에 애드센스 단위 코드 삽입 -->
+        <ins class="adsbygoogle" style="display:inline-block;width:970px;height:90px"
+            data-ad-client="ca-pub-9091337530987580" data-ad-slot="광고단위_ID를_여기에_입력하세요"></ins>
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

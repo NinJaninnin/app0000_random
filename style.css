@@ -1,0 +1,352 @@
+/* 기본 초기화 및 폰트 설정 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Malgun Gothic', sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
+    overflow: hidden; /* 화면을 꽉 차게 쓰기 위해 스크롤 숨김 */
+}
+
+/* 전체 앱 컨테이너 */
+.app-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* 좌측 세팅 패널 */
+.settings-panel {
+    flex: 0 0 350px;
+    background-color: #1e1e1e;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px; /* 컨텐츠가 많아져 gap을 약간 좁혔음 */
+    overflow-y: auto;
+    border-right: 2px solid #333;
+    z-index: 10;
+}
+
+.settings-panel h2 {
+    color: #00f2fe;
+    font-size: 1.5rem;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.setting-group {
+    background: #2a2a2a;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.setting-group h3 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+.help-text {
+    font-size: 0.85rem;
+    color: #aaa;
+    margin-bottom: 10px;
+}
+
+.radio-group { display: flex; flex-direction: column; gap: 8px; }
+.radio-group label { cursor: pointer; font-size: 0.95rem; }
+
+#prize-list-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.prize-row { display: flex; gap: 8px; align-items: center; }
+.prize-name { flex: 2; }
+.prize-count { flex: 1; }
+
+input[type="text"], input[type="number"] {
+    background: #121212;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    padding: 10px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.btn-remove { background-color: #ff4d4d; color: white; padding: 8px 12px; }
+.btn-remove:hover { background-color: #ff1a1a; }
+.btn-add { background-color: #333; color: #fff; width: 100%; }
+.btn-add:hover { background-color: #444; }
+
+/* 배경 및 박스 교체용 썸네일 리스트 */
+.bg-thumbnails, .box-thumbnails {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.bg-thumb, .box-thumb {
+    width: 60px;
+    height: 40px;
+    background-color: #333;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.bg-thumb:hover, .box-thumb:hover { border-color: #00f2fe; }
+.bg-thumb.active, .box-thumb.active { border-color: #00f2fe; color: #00f2fe; font-weight: bold; }
+
+.setting-actions { display: flex; flex-direction: column; gap: 12px; margin-top: auto; }
+.btn-primary { background-color: #00f2fe; color: #000; font-size: 1.1rem; padding: 14px; }
+.btn-primary:hover { background-color: #00d2da; }
+.btn-secondary { background-color: #555; color: #fff; }
+.btn-secondary:hover { background-color: #666; }
+
+/* =========================================
+   우측 방송 송출 화면
+   ========================================= */
+.broadcast-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    /* 고정된 배너 광고를 위해 하단 여백 추가 (90px + 여유) */
+    padding-bottom: 120px; 
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: background-image 0.5s ease;
+}
+
+.broadcast-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* 상태 현황판 */
+.status-board {
+    position: relative;
+    z-index: 1;
+    background: rgba(30, 30, 30, 0.85);
+    border: 2px solid #00f2fe;
+    border-radius: 12px;
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    min-height: 80px;
+    box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2);
+}
+
+.status-title { font-size: 1.2rem; font-weight: bold; color: #00f2fe; margin-bottom: 8px; }
+.status-list { display: flex; flex-wrap: wrap; gap: 12px; font-size: 1.1rem; }
+.status-item { background: #333; padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; }
+.status-item .count { color: #00f2fe; font-weight: bold; }
+.status-item.empty { opacity: 0.5; text-decoration: line-through; }
+
+/* 뽑기판 컨테이너 */
+.board-container {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* 보드 외부 스크롤 방지 */
+}
+
+.board {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 100%;
+    transition: transform 0.3s ease;
+}
+
+@keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    10% { transform: translate(-1px, -2px) rotate(-1deg); }
+    20% { transform: translate(-3px, 0px) rotate(1deg); }
+    30% { transform: translate(3px, 2px) rotate(0deg); }
+    40% { transform: translate(1px, -1px) rotate(1deg); }
+    50% { transform: translate(-1px, 2px) rotate(-1deg); }
+    60% { transform: translate(-3px, 1px) rotate(0deg); }
+    70% { transform: translate(3px, 1px) rotate(-1deg); }
+    80% { transform: translate(-1px, -1px) rotate(1deg); }
+    90% { transform: translate(1px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.board.shuffling {
+    animation: shake 0.5s;
+}
+
+/* 타일 모양 (앞/뒤면) */
+.tile {
+    width: 100%;
+    aspect-ratio: auto;
+    min-height: 45px; 
+    perspective: 1000px; 
+    cursor: pointer;
+}
+
+.tile-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+}
+
+.tile.flipped .tile-inner {
+    transform: rotateY(180deg);
+}
+
+.tile-front, .tile-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    font-size: 2rem;
+    font-weight: bold;
+    user-select: none;
+    
+    /* 박스 커스텀 이미지를 위한 설정 */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* 타일 앞면 (기본 회색 배경) */
+.tile-front {
+    background-color: #3a3a3a;
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(0,0,0,0.3));
+    border: 1px solid #555;
+    color: #fff;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+}
+
+.tile:hover .tile-front {
+    border-color: #00f2fe;
+}
+
+/* 당첨 결과창 */
+.tile-back.prize {
+    background: linear-gradient(135deg, #00f2fe, #4facfe);
+    color: #000;
+    transform: rotateY(180deg);
+    border: 2px solid #fff;
+    text-shadow: 1px 1px 3px rgba(255,255,255,0.6);
+    font-size: 1.2rem;
+    padding: 5px;
+    text-align: center;
+    word-break: keep-all;
+}
+
+/* 꽝 결과창 */
+.tile-back.bust {
+    background: linear-gradient(135deg, #444, #222);
+    color: #aaa;
+    transform: rotateY(180deg);
+    border: 1px solid #111;
+    font-size: 1.5rem;
+}
+
+/* =========================================
+   수익화 관련 UI 요소
+   ========================================= */
+
+/* 1. 애드센스 하단 고정 배너 컨테이너 */
+.adsense-container {
+    position: fixed;
+    bottom: 0px; 
+    /* 화면 정중앙에 위치하도록 계산: 패널 넓이 350px를 제외한 나머지 화면의 중앙 */
+    left: calc(350px + (100vw - 350px) / 2); 
+    transform: translateX(-50%);
+    
+    width: 970px;
+    height: 90px;
+    background-color: rgba(20, 20, 20, 0.9);
+    border-top: 2px solid #333;
+    border-radius: 8px 8px 0 0;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.ads-placeholder {
+    color: #888;
+    font-size: 0.95rem;
+    letter-spacing: 2px;
+}
+
+/* 2. 전면 동영상 광고 오버레이 */
+.interstitial-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.interstitial-overlay.hidden {
+    display: none;
+}
+
+#ad-video {
+    width: 80vw;
+    max-width: 1000px;
+    aspect-ratio: 16/9;
+    background-color: #000;
+    border: 3px solid #00f2fe;
+    border-radius: 8px;
+    box-shadow: 0 0 30px rgba(0, 242, 254, 0.3);
+}
+
+.btn-skip-ad {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.btn-skip-ad:hover {
+    background: rgba(255, 255, 255, 0.4);
+}

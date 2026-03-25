@@ -32,14 +32,39 @@ function bindEvents() {
     DOM.btnApply.addEventListener('click', applySettings);
     DOM.btnReset.addEventListener('click', resetBoard);
 
-    // 배경 이미지 썸네일 클릭 이벤트
     DOM.bgThumbs.forEach(thumb => {
         thumb.addEventListener('click', (e) => changeBackground(e.currentTarget));
     });
 
-    // 박스(타일 앞면) 이미지 썸네일 클릭 이벤트
     DOM.boxThumbs.forEach(thumb => {
         thumb.addEventListener('click', (e) => changeBoxImage(e.currentTarget));
+    });
+
+    // 다중 창(탭) 실시간 연동 (같은 브라우저 내에서만 동작)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'boardSyncState' && e.newValue) {
+            try {
+                const data = JSON.parse(e.newValue);
+                // 1. 뒤집힌 타일 동기화
+                if (data.flipped) {
+                    document.querySelectorAll('.tile').forEach(t => {
+                        const idx = parseInt(t.dataset.index, 10);
+                        if (data.flipped.includes(idx)) {
+                            t.classList.add('flipped');
+                        } else {
+                            t.classList.remove('flipped');
+                        }
+                    });
+                }
+                // 2. 남은 상품 수량 동기화
+                if (data.remaining) {
+                    remainingPrizes = data.remaining;
+                    updateStatusBoard();
+                }
+            } catch(err) {
+                console.error("동기화 파싱 에러", err);
+            }
+        }
     });
 }
 
@@ -260,6 +285,9 @@ function applySettings() {
     DOM.board.classList.add('shuffling');
 
     if(window.updateObsUrl) window.updateObsUrl();
+    
+    // 초기화 시 싱크 데이터도 리셋
+    broadcastBoardState();
 }
 
 function shuffleArray(array) {
@@ -340,10 +368,32 @@ function handleTileClick(e) {
                 updateStatusBoard();
             }
         }
+        
+        // 클릭 직후 현재 상태 전체를 로컬스토리지에 저장하여 다른 창과 동기화
+        broadcastBoardState();
     };
 
     drawCount++;
     executeFlip();
+}
+
+/**
+ * 전역 상태를 로컬 스토리지에 기록하여 다른 창에서 storage 이벤트 수신
+ */
+function broadcastBoardState() {
+    const flippedIndices = [];
+    document.querySelectorAll('.tile.flipped').forEach(t => {
+        flippedIndices.push(parseInt(t.dataset.index, 10));
+    });
+    
+    const payload = {
+        ts: Date.now(),
+        flipped: flippedIndices,
+        remaining: remainingPrizes
+    };
+    
+    // localStorage를 통해 이벤트 브로드캐스팅
+    localStorage.setItem('boardSyncState', JSON.stringify(payload));
 }
 
 // --- [공통 화면 업데이트 함수] ---
@@ -533,9 +583,11 @@ window.onload = () => {
     if (isObs) {
         toggleSettingsPanel(); 
         const bp = document.getElementById('broadcast-panel');
-        if (bp) bp.style.paddingBottom = '24px'; 
+        if (bp) bp.style.paddingBottom = '0px'; 
         const ads = document.getElementById('adsense-container');
         if (ads) ads.style.display = 'none'; 
+        const statusBoard = document.querySelector('.status-board');
+        if (statusBoard) statusBoard.style.display = 'none';
         
         if (dataStr) {
             setTimeout(() => { applySettings(); }, 100);

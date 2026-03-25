@@ -12,8 +12,11 @@
 
 <body>
     <div class="app-container">
+        <!-- 설정 패널 토글 버튼 -->
+        <button id="btn-toggle-panel" class="btn-toggle-panel" onclick="toggleSettingsPanel()">◀</button>
+
         <!-- [세팅 패널] - 스트리머 조작용 -->
-        <aside class="settings-panel">
+        <aside class="settings-panel" id="settings-panel">
             <h2>설정 패널 (v2)</h2>
 
             <div class="setting-group">
@@ -27,16 +30,37 @@
 
             <div class="setting-group">
                 <h3>2. 상품 목록 설정</h3>
-                <p class="help-text">나머지 빈칸은 '꽝'으로 자동 채워집니다.</p>
-                <div id="prize-list-container">
-                    <!-- 기본 1개의 입력 폼 -->
-                    <div class="prize-row">
-                        <input type="text" class="prize-name" placeholder="상품명 (예: 치킨 기프티콘)">
-                        <input type="number" class="prize-count" placeholder="수량" min="1" value="1">
-                        <button class="btn-remove" onclick="removePrizeRow(this)">X</button>
-                    </div>
+                
+                <div class="prize-tabs">
+                    <button id="tab-btn-normal" class="tab-btn active" onclick="switchTab('normal')">지정 안함 (랜덤배치)</button>
+                    <button id="tab-btn-fixed" class="tab-btn" onclick="switchTab('fixed')">칸 번호 지정 (고정배치)</button>
                 </div>
-                <button class="btn-add" id="btn-add-prize">+ 상품 추가하기</button>
+
+                <!-- 탭 1: 랜덤 상품 (수량만) -->
+                <div id="tab-normal" class="tab-content active">
+                    <p class="help-text">나머지 빈칸은 '꽝'으로 자동 채워집니다.</p>
+                    <div id="prize-list-container">
+                        <div class="prize-row">
+                            <input type="text" class="prize-name" placeholder="상품명">
+                            <input type="number" class="prize-count" placeholder="수량" min="1" value="1">
+                            <button class="btn-remove" onclick="removePrizeRow(this)">X</button>
+                        </div>
+                    </div>
+                    <button class="btn-add" id="btn-add-prize">+ 랜덤 상품 추가</button>
+                </div>
+
+                <!-- 탭 2: 지정칸 상품 (지정 번호) -->
+                <div id="tab-fixed" class="tab-content">
+                    <p class="help-text">원하는 번호에 상품을 강제로 위치시킵니다.<br>(여러 칸은 쉼표 구분. 예: 5,12)</p>
+                    <div id="fixed-prize-list-container">
+                        <div class="prize-row fixed-row">
+                            <input type="text" class="prize-name" placeholder="상품명">
+                            <input type="text" class="prize-fixed-input" placeholder="지정칸 번호">
+                            <button class="btn-remove" onclick="removeFixedPrizeRow(this)">X</button>
+                        </div>
+                    </div>
+                    <button class="btn-add" id="btn-add-fixed-prize">+ 지정칸 상품 추가</button>
+                </div>
             </div>
 
             <div class="setting-group">
@@ -65,6 +89,15 @@
                     <div class="box-thumb active" data-box="none">기본 회색</div>
                 </div>
                 <p class="help-text" style="margin-top:5px; font-size:11px;">※ img 폴더 내 박스 (box_000x.png) 파일을 불러옵니다.</p>
+            </div>
+
+            <div class="setting-group">
+                <h3>5. OBS 방송 송출 설정</h3>
+                <p class="help-text">아래 주소를 복사하여 OBS 브라우저 소스의 'URL' 란에 붙여넣으세요. 방송 화면에는 설정 패널 없이 투명하게 출력됩니다.</p>
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+                    <input type="text" id="obs-url-input" value="https://www.a1dea.kr/?obs=1" readonly style="flex: 1; padding: 8px; font-size: 0.85rem; background: #111; border: 1px solid #555; color: #00f2fe; border-radius: 4px; outline: none; cursor: pointer;" onclick="this.select()">
+                    <button class="btn-secondary" onclick="copyObsUrl()" style="padding: 8px 12px; font-size: 0.85rem; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">주소 복사</button>
+                </div>
             </div>
 
             <div class="setting-actions">

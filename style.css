@@ -19,6 +19,30 @@ body {
     width: 100vw;
 }
 
+/* 설정 패널 토글 버튼 */
+.btn-toggle-panel {
+    position: absolute;
+    top: 15px;
+    left: 350px;
+    z-index: 1000;
+    background: #00f2fe;
+    color: #000;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    width: 25px;
+    height: 60px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+}
+
+.btn-toggle-panel.collapsed { left: 0; background: #333; color: #00f2fe; }
+.btn-toggle-panel.collapsed:hover { background: #00f2fe; color: #000; }
+.settings-panel.collapsed { display: none; }
+
 /* 좌측 세팅 패널 */
 .settings-panel {
     flex: 0 0 350px;
@@ -55,15 +79,23 @@ body {
     font-size: 0.85rem;
     color: #aaa;
     margin-bottom: 10px;
+    line-height: 1.4;
 }
 
 .radio-group { display: flex; flex-direction: column; gap: 8px; }
 .radio-group label { cursor: pointer; font-size: 0.95rem; }
 
-#prize-list-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+.prize-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.tab-btn { flex: 1; padding: 8px; background: #333; color: #ccc; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+.tab-btn.active { background: #00f2fe; color: #000; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+#prize-list-container, #fixed-prize-list-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
 .prize-row { display: flex; gap: 8px; align-items: center; }
 .prize-name { flex: 2; }
 .prize-count { flex: 1; }
+.prize-fixed-input { flex: 1.5; }
 
 input[type="text"], input[type="number"] {
     background: #121212;
@@ -172,16 +204,17 @@ button {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    overflow: hidden; /* 보드 외부 스크롤 방지 */
+    overflow: auto; /* 작은 화면에서 스크롤 허용 */
 }
 
 .board {
     display: grid;
-    gap: 10px;
+    gap: 8px;
     width: 100%;
-    max-width: 900px;
-    max-height: 100%;
+    /* max-width는 script.js에서 보드 크기에 따라 제어 */
+    margin: 0 auto;
     transition: transform 0.3s ease;
+    place-content: center;
 }
 
 @keyframes shake {
@@ -205,8 +238,7 @@ button {
 /* 타일 모양 (앞/뒤면) */
 .tile {
     width: 100%;
-    aspect-ratio: auto;
-    min-height: 45px; 
+    aspect-ratio: 1 / 1;
     perspective: 1000px; 
     cursor: pointer;
 }
@@ -233,12 +265,12 @@ button {
     justify-content: center;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    font-size: 2rem;
+    font-size: inherit; /* 동적 폰트 사이즈 상속 */
     font-weight: bold;
     user-select: none;
     
     /* 박스 커스텀 이미지를 위한 설정 */
-    background-size: cover;
+    background-size: contain; /* 이미지 비율 유지, 안잘리게 */
     background-position: center;
     background-repeat: no-repeat;
 }

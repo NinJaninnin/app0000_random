@@ -36,22 +36,34 @@ function bindEvents() {
     DOM.btnReset.addEventListener('click', resetBoard);
 
     DOM.bgThumbs.forEach(thumb => {
-        thumb.addEventListener('click', (e) => changeBackground(e.currentTarget));
+        thumb.addEventListener('click', (e) => {
+            changeBackground(e.currentTarget);
+            if(isSettingComplete) updateObsUrl();
+        });
     });
 
     DOM.boxThumbs.forEach(thumb => {
-        thumb.addEventListener('click', (e) => changeBoxImage(e.currentTarget));
+        thumb.addEventListener('click', (e) => {
+            changeBoxImage(e.currentTarget);
+            if(isSettingComplete) updateObsUrl();
+        });
     });
 
     if(DOM.thumbThumbs) {
         DOM.thumbThumbs.forEach(thumb => {
-            thumb.addEventListener('click', (e) => changeTopThumbnail(e.currentTarget));
+            thumb.addEventListener('click', (e) => {
+                changeTopThumbnail(e.currentTarget);
+                if(isSettingComplete) updateObsUrl();
+            });
         });
     }
 
     if(DOM.coverThumbs) {
         DOM.coverThumbs.forEach(thumb => {
-            thumb.addEventListener('click', (e) => changeBoardCover(e.currentTarget));
+            thumb.addEventListener('click', (e) => {
+                changeBoardCover(e.currentTarget);
+                if(isSettingComplete) updateObsUrl();
+            });
         });
     }
 
@@ -404,6 +416,12 @@ function renderBoard() {
                 <div class="tile-back ${backClass}">${tileData.name}</div>
             </div>
         `;
+        
+        // 간헐적인 OBS 필터링 방지를 위해 DOM 객체 직접 스타일 주입 병행
+        const frontEl = tileWrapper.querySelector('.tile-front');
+        if (customBoxImage !== 'none' && frontEl) {
+            frontEl.style.backgroundImage = `url('${customBoxImage}')`;
+        }
 
         tileWrapper.addEventListener('click', handleTileClick);
         DOM.board.appendChild(tileWrapper);

@@ -13,24 +13,17 @@ const DOM = {
     btnReset: document.getElementById('btn-reset'),
     statusList: document.getElementById('status-list'),
     bgThumbs: document.querySelectorAll('.bg-thumb'),
-    boxThumbs: document.querySelectorAll('.box-thumb'), // 커스텀 박스 썸네일 추가
-    broadcastPanel: document.getElementById('broadcast-panel'),
-    adModal: document.getElementById('ad-modal'),       // 전면 광고 모달 추가
-    adVideo: document.getElementById('ad-video'),       // 광고 비디오 태그 추가
-    btnSkipAd: document.getElementById('btn-skip-ad')   // 광고 닫기 버튼
+    boxThumbs: document.querySelectorAll('.box-thumb'),
+    broadcastPanel: document.getElementById('broadcast-panel')
 };
 
 // --- [상태 변수(State)] ---
 let currentTilesData = [];       // 현재 생성된 전제 타일 데이터
-let totalBoardSize = 25;         // 보드 크기 기본값
-let remainingPrizes = {};        // { "상품명": 남은수량 } 객체
-let isSettingComplete = false;   // 설정 완료 플래그
-
-// (신규 추가된 상태 변수)
-let customBoxImage = 'none';     // 현재 선택된 박스 이미지 URL 상태
-let drawCount = 0;               // 사용자가 클릭해서 타일을 깐(뽑기) 횟수 추적
-let adTimeout = null;            // 광고 재생 타이머 아이디
-let currentFlipCallback = null;  // 광고 종료 후 실행해야 할 실제 타일 뒤집기 함수 객체 보관용
+let totalBoardSize = 25;         
+let remainingPrizes = {};        
+let isSettingComplete = false;   
+let customBoxImage = 'none';     
+let drawCount = 0;               
 
 // --- [이벤트 리스너 등록] ---
 function bindEvents() {
@@ -48,11 +41,6 @@ function bindEvents() {
     DOM.boxThumbs.forEach(thumb => {
         thumb.addEventListener('click', (e) => changeBoxImage(e.currentTarget));
     });
-
-    // 전면 광고 스킵(강제 닫기) 이벤트
-    if (DOM.btnSkipAd) {
-        DOM.btnSkipAd.addEventListener('click', closeAdModal);
-    }
 }
 
 // --- [동적 UI 제어 함수] ---
@@ -270,6 +258,8 @@ function applySettings() {
     DOM.board.classList.remove('shuffling');
     void DOM.board.offsetWidth; 
     DOM.board.classList.add('shuffling');
+
+    if(window.updateObsUrl) window.updateObsUrl();
 }
 
 function shuffleArray(array) {
@@ -352,60 +342,8 @@ function handleTileClick(e) {
         }
     };
 
-    // 1. 뽑기 클릭 횟수 1 증가
     drawCount++;
-
-    // 2. 카운트가 10의 배수 (10, 20, 30...) 일 경우 전면 광고 띄우기 수행
-    if (drawCount % 10 === 0) {
-        showVideoAd(executeFlip);
-    } else {
-        // 아니면 원래 하던 대로 즉시 타일 뒤집기
-        executeFlip();
-    }
-}
-
-// --- [수익화(광고) 관련 함수] ---
-
-/**
- * 동영상 전면 모달 광고 표출 함수
- * 15초(15000ms) 동안 강제로 재생 후 지정된 콜백(타일 결과보여주기)을 실행합니다.
- * @param {Function} onCompleteCallback - 광고 시청 완료 후 실행할 함수
- */
-function showVideoAd(onCompleteCallback) {
-    currentFlipCallback = onCompleteCallback;
-    
-    // 모달 활성화 및 초기화
-    DOM.adModal.classList.remove('hidden');
-    DOM.adVideo.currentTime = 0; // 영상 처음부터
-    
-    // 비디오 재생 시도
-    // (크롬 등에서 자동재생 정책에 의해 에러가 날수도 있으므로 catch 블록 처리 필요)
-    DOM.adVideo.play().catch(e => {
-        console.warn("비디오 재생이 차단되었거나 파일이 없습니다. 그래도 15초 후 닫힙니다.", e);
-    });
-
-    // 15초 후 자동으로 광고를 닫고 뽑기 결과를 표출하도록 타이머 설정
-    adTimeout = setTimeout(() => {
-        closeAdModal();
-    }, 15000);
-}
-
-/**
- * 광고 모달 닫기 및 보류되었던 콜백 함수 실행
- */
-function closeAdModal() {
-    // 타이머가 돌고 있다면 해제
-    if (adTimeout) clearTimeout(adTimeout);
-    
-    // 모달 숨김 및 영상 일시정지
-    DOM.adModal.classList.add('hidden');
-    DOM.adVideo.pause();
-
-    // 혹시 보관된 타일 뒤집기 콜백이 있다면 마저 실행!
-    if (currentFlipCallback) {
-        currentFlipCallback();
-        currentFlipCallback = null; // 메모리 정리
-    }
+    executeFlip();
 }
 
 // --- [공통 화면 업데이트 함수] ---
@@ -459,7 +397,40 @@ function resetBoard() {
     }, 600);
 }
 
+window.updateObsUrl = function() {
+    const selectedSizeRadio = document.querySelector('input[name="boardSize"]:checked');
+    const size = parseInt(selectedSizeRadio.value, 10);
+    const bgThumbnail = document.querySelector('.bg-thumb.active');
+    const bg = bgThumbnail ? bgThumbnail.getAttribute('data-bg') : 'none';
+    const bxThumbnail = document.querySelector('.box-thumb.active');
+    const bx = bxThumbnail ? bxThumbnail.getAttribute('data-box') : 'none';
+    
+    const r = [];
+    document.querySelectorAll('#prize-list-container .prize-row').forEach(row => {
+        const n = row.querySelector('.prize-name').value.trim();
+        const c = parseInt(row.querySelector('.prize-count').value, 10);
+        if (n && !isNaN(c) && c > 0) r.push([n, c]);
+    });
+    
+    const f = [];
+    document.querySelectorAll('#fixed-prize-list-container .fixed-row').forEach(row => {
+        const n = row.querySelector('.prize-name').value.trim();
+        const str = row.querySelector('.prize-fixed-input').value.trim();
+        if (n && str) f.push([n, str]);
+    });
+    
+    const config = { s: size, bg: bg, bx: bx, r: r, f: f };
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
+    
+    const baseUrl = window.location.href.split('?')[0]; 
+    const newUrl = `${baseUrl}?obs=1&data=${b64}`;
+    
+    const input = document.getElementById('obs-url-input');
+    if (input) input.value = newUrl;
+};
+
 window.copyObsUrl = function() {
+    window.updateObsUrl();
     const urlInput = document.getElementById('obs-url-input');
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(urlInput.value).then(() => {
@@ -490,19 +461,84 @@ window.toggleSettingsPanel = function() {
     }
 };
 
+window.loadFromUrl = function(dataStr) {
+    try {
+        const jsonStr = decodeURIComponent(escape(atob(dataStr)));
+        const config = JSON.parse(jsonStr);
+        
+        const radio = document.querySelector(`input[name="boardSize"][value="${config.s}"]`);
+        if (radio) radio.checked = true;
+        
+        const bgThumb = document.querySelector(`.bg-thumb[data-bg="${config.bg}"]`);
+        if (bgThumb) {
+            document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('active'));
+            bgThumb.classList.add('active');
+        }
+        
+        const bxThumb = document.querySelector(`.box-thumb[data-box="${config.bx}"]`);
+        if (bxThumb) {
+            document.querySelectorAll('.box-thumb').forEach(t => t.classList.remove('active'));
+            bxThumb.classList.add('active');
+        }
+        
+        const pCont = document.getElementById('prize-list-container');
+        pCont.innerHTML = '';
+        if (config.r.length === 0) {
+            addPrizeRow(); 
+        } else {
+            config.r.forEach(item => {
+                addPrizeRow();
+                const rows = pCont.querySelectorAll('.prize-row');
+                const lastRow = rows[rows.length - 1];
+                lastRow.querySelector('.prize-name').value = item[0];
+                lastRow.querySelector('.prize-count').value = item[1];
+            });
+        }
+        
+        const fCont = document.getElementById('fixed-prize-list-container');
+        fCont.innerHTML = '';
+        if (config.f.length === 0) {
+            addFixedPrizeRow();
+        } else {
+            config.f.forEach(item => {
+                addFixedPrizeRow();
+                const rows = fCont.querySelectorAll('.fixed-row');
+                const lastRow = rows[rows.length - 1];
+                lastRow.querySelector('.prize-name').value = item[0];
+                lastRow.querySelector('.prize-fixed-input').value = item[1];
+            });
+        }
+    } catch(e) {
+        console.error("URL 데이터 복구 실패", e);
+    }
+};
+
 // --- [앱 초기화] ---
 window.onload = () => {
     bindEvents();
 
-    // 첫 실행 시 배경을 bg_0000.webp로 기본 적용
-    const defaultBgThumb = document.querySelector('.bg-thumb[data-bg="img/bg_0000.webp"]');
-    if (defaultBgThumb) {
-        changeBackground(defaultBgThumb);
+    const urlParams = new URLSearchParams(window.location.search);
+    const dataStr = urlParams.get('data');
+    const isObs = urlParams.get('obs') === '1' || urlParams.get('obs') === 'true';
+
+    if (dataStr) {
+        window.loadFromUrl(dataStr);
+    } else {
+        const defaultBgThumb = document.querySelector('.bg-thumb[data-bg="img/bg_0000.webp"]');
+        if (defaultBgThumb) {
+            changeBackground(defaultBgThumb);
+        }
     }
 
-    // OBS 모드: 주소 뒤에 ?obs=1 파라미터가 있을 경우 설정 패널을 닫은 상태로 시작
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('obs') === '1' || urlParams.get('obs') === 'true') {
-        toggleSettingsPanel();
+    if (isObs) {
+        toggleSettingsPanel(); 
+        const bp = document.getElementById('broadcast-panel');
+        if (bp) bp.style.paddingBottom = '24px'; 
+        const ads = document.getElementById('adsense-container');
+        if (ads) ads.style.display = 'none'; 
+        
+        if (dataStr) {
+            setTimeout(() => { applySettings(); }, 100);
+        }
     }
 };

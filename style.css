@@ -77,9 +77,46 @@ body {
 
 .help-text {
     font-size: 0.85rem;
-    color: #aaa;
-    margin-bottom: 10px;
-    line-height: 1.4;
+    color: #888;
+    margin-bottom: 12px;
+}
+
+/* 접이식 설정 패널 */
+.setting-group.collapsible {
+    padding-bottom: 8px;
+}
+.setting-group.collapsible .toggle-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+    transition: color 0.2s;
+}
+.setting-group.collapsible .toggle-header:hover {
+    color: #fff;
+}
+.setting-group.collapsible .setting-content {
+    margin-top: 12px;
+    display: block;
+}
+.setting-group.collapsible.collapsed .setting-content {
+    display: none;
+}
+.toggle-icon {
+    font-size: 0.8rem;
+    color: #00f2fe;
+    transition: transform 0.3s;
+}
+.setting-group.collapsible.collapsed .toggle-icon {
+    transform: rotate(90deg); /* ▼에서 ▶ 방향처럼 회전 (또는 화살표 모양에 따라 다름) */
+}
+
+/* 탭 버튼 스타일 (고정칸 기능 위해 추가) */
+.tab-headers {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
 }
 
 .radio-group { display: flex; flex-direction: column; gap: 8px; }
@@ -120,14 +157,14 @@ button {
 .btn-add { background-color: #333; color: #fff; width: 100%; }
 .btn-add:hover { background-color: #444; }
 
-/* 배경 및 박스 교체용 썸네일 리스트 */
-.bg-thumbnails, .box-thumbnails {
+/* 배경, 박스, 타이틀, 커버 썸네일 리스트 공동 스타일 */
+.bg-thumbnails, .box-thumbnails, .thumb-thumbnails, .cover-thumbnails {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
 
-.bg-thumb, .box-thumb {
+.bg-thumb, .box-thumb, .thumb-thumb, .cover-thumb {
     width: 60px;
     height: 40px;
     background-color: #333;
@@ -139,10 +176,12 @@ button {
     font-size: 0.75rem;
     cursor: pointer;
     color: #aaa;
+    text-align: center;
+    word-break: keep-all;
 }
 
-.bg-thumb:hover, .box-thumb:hover { border-color: #00f2fe; }
-.bg-thumb.active, .box-thumb.active { border-color: #00f2fe; color: #00f2fe; font-weight: bold; }
+.bg-thumb:hover, .box-thumb:hover, .thumb-thumb:hover, .cover-thumb:hover { border-color: #00f2fe; }
+.bg-thumb.active, .box-thumb.active, .thumb-thumb.active, .cover-thumb.active { border-color: #00f2fe; color: #00f2fe; font-weight: bold; }
 
 .setting-actions { display: flex; flex-direction: column; gap: 12px; margin-top: auto; }
 .btn-primary { background-color: #00f2fe; color: #000; font-size: 1.1rem; padding: 14px; }
@@ -176,35 +215,47 @@ button {
     pointer-events: none;
 }
 
-/* 상태 현황판 */
-.status-board {
+
+
+/* 통합 컨텐츠 래퍼 (썸네일 + 보드 전체 배경 적용) */
+.content-wrapper {
+    margin: auto; /* broadcast-panel 내에서 수직/수평 자동 중앙 정렬 */
+    width: 100%;
     position: relative;
-    z-index: 1;
-    background: rgba(30, 30, 30, 0.85);
-    border: 2px solid #00f2fe;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     border-radius: 12px;
-    padding: 16px 24px;
-    margin-bottom: 24px;
-    min-height: 80px;
-    box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2);
 }
 
-.status-title { font-size: 1.2rem; font-weight: bold; color: #00f2fe; margin-bottom: 8px; }
-.status-list { display: flex; flex-wrap: wrap; gap: 12px; font-size: 1.1rem; }
-.status-item { background: #333; padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; }
-.status-item .count { color: #00f2fe; font-weight: bold; }
-.status-item.empty { opacity: 0.5; text-decoration: line-through; }
+/* 상단 타이틀 썸네일 영역 */
+.top-thumbnail-wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 0 auto 8px auto; /* 타일 그리드 gap과 동일한 8px로 간격 대폭 축소 */
+}
+
+#top-thumbnail-img {
+    max-width: 100%;
+    max-height: 250px;
+    object-fit: contain; /* 비율 유지하며 적절히 줄어듦 */
+}
 
 /* 뽑기판 컨테이너 */
 .board-container {
     position: relative;
     z-index: 1;
-    flex: 1;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    overflow: auto; /* 작은 화면에서 스크롤 허용 */
 }
 
 .board {
@@ -340,45 +391,46 @@ button {
     letter-spacing: 2px;
 }
 
-/* 2. 전면 동영상 광고 오버레이 */
-.interstitial-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 9999;
+/* =========================================
+   OBS 송출 모드 투명 & 랩 최적화 레이아웃
+   ========================================= */
+body.obs-mode {
+    background-color: transparent !important;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
 }
 
-.interstitial-overlay.hidden {
-    display: none;
+body.obs-mode .app-container {
+    width: auto;
+    height: auto;
+    background-color: transparent;
 }
 
-#ad-video {
-    width: 80vw;
-    max-width: 1000px;
-    aspect-ratio: 16/9;
-    background-color: #000;
-    border: 3px solid #00f2fe;
-    border-radius: 8px;
-    box-shadow: 0 0 30px rgba(0, 242, 254, 0.3);
+body.obs-mode .btn-toggle-panel,
+body.obs-mode .settings-panel {
+    display: none !important;
 }
 
-.btn-skip-ad {
-    position: absolute;
-    top: 30px;
-    right: 30px;
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-    border: 1px solid #fff;
-    padding: 10px 20px;
-    font-size: 1.1rem;
-    cursor: pointer;
-    border-radius: 5px;
+body.obs-mode .broadcast-panel {
+    flex: none;
+    padding: 24px !important; /* 박스칸보다 약간 큰 여백 */
+    width: max-content;
+    height: max-content;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
 }
 
-.btn-skip-ad:hover {
-    background: rgba(255, 255, 255, 0.4);
+body.obs-mode .broadcast-panel::before {
+    border-radius: inherit;
+}
+
+/* 기본 회색(none) 배경이 선택되었을 때 투명화 */
+.broadcast-panel.no-bg {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.broadcast-panel.no-bg::before {
+    display: none !important;
 }

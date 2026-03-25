@@ -11,10 +11,13 @@ const DOM = {
     btnAddFixedPrize: document.getElementById('btn-add-fixed-prize'),
     btnApply: document.getElementById('btn-apply'),
     btnReset: document.getElementById('btn-reset'),
-    statusList: document.getElementById('status-list'),
     bgThumbs: document.querySelectorAll('.bg-thumb'),
     boxThumbs: document.querySelectorAll('.box-thumb'),
-    broadcastPanel: document.getElementById('broadcast-panel')
+    thumbThumbs: document.querySelectorAll('.thumb-thumb'),
+    coverThumbs: document.querySelectorAll('.cover-thumb'),
+    broadcastPanel: document.getElementById('broadcast-panel'),
+    contentWrapper: document.getElementById('content-wrapper'),
+    board: document.getElementById('board')
 };
 
 // --- [상태 변수(State)] ---
@@ -40,6 +43,18 @@ function bindEvents() {
         thumb.addEventListener('click', (e) => changeBoxImage(e.currentTarget));
     });
 
+    if(DOM.thumbThumbs) {
+        DOM.thumbThumbs.forEach(thumb => {
+            thumb.addEventListener('click', (e) => changeTopThumbnail(e.currentTarget));
+        });
+    }
+
+    if(DOM.coverThumbs) {
+        DOM.coverThumbs.forEach(thumb => {
+            thumb.addEventListener('click', (e) => changeBoardCover(e.currentTarget));
+        });
+    }
+
     // 다중 창(탭) 실시간 연동 (같은 브라우저 내에서만 동작)
     window.addEventListener('storage', (e) => {
         if (e.key === 'boardSyncState' && e.newValue) {
@@ -59,7 +74,6 @@ function bindEvents() {
                 // 2. 남은 상품 수량 동기화
                 if (data.remaining) {
                     remainingPrizes = data.remaining;
-                    updateStatusBoard();
                 }
             } catch(err) {
                 console.error("동기화 파싱 에러", err);
@@ -143,8 +157,51 @@ function changeBackground(targetThumb) {
     const bgUrl = targetThumb.getAttribute('data-bg');
     if (bgUrl === 'none') {
         DOM.broadcastPanel.style.backgroundImage = 'none';
+        DOM.broadcastPanel.classList.add('no-bg');
     } else {
         DOM.broadcastPanel.style.backgroundImage = `url('${bgUrl}')`;
+        DOM.broadcastPanel.classList.remove('no-bg');
+    }
+}
+
+/**
+ * 상단 썸네일 타이틀을 교체
+ */
+function changeTopThumbnail(targetThumb) {
+    if (DOM.thumbThumbs) {
+        DOM.thumbThumbs.forEach(t => t.classList.remove('active'));
+        if(targetThumb) targetThumb.classList.add('active');
+    }
+    
+    const thumbUrl = targetThumb.getAttribute('data-thumb');
+    const imgEl = document.getElementById('top-thumbnail-img');
+    if (imgEl) {
+        if (thumbUrl === 'none') {
+            imgEl.style.display = 'none';
+            imgEl.src = '';
+        } else {
+            imgEl.src = thumbUrl;
+            imgEl.style.display = 'block';
+        }
+    }
+}
+
+/**
+ * 보드 뒷배경(커버) 이미지를 교체
+ */
+function changeBoardCover(targetThumb) {
+    if (DOM.coverThumbs) {
+        DOM.coverThumbs.forEach(t => t.classList.remove('active'));
+        if(targetThumb) targetThumb.classList.add('active');
+    }
+    
+    const coverUrl = targetThumb.getAttribute('data-cover');
+    if (DOM.contentWrapper) {
+        if (coverUrl === 'none') {
+            DOM.contentWrapper.style.backgroundImage = 'none';
+        } else {
+            DOM.contentWrapper.style.backgroundImage = `url('${coverUrl}')`;
+        }
     }
 }
 
@@ -273,7 +330,6 @@ function applySettings() {
     }
 
     renderBoard();
-    updateStatusBoard();
 
     isSettingComplete = true;
     
@@ -319,6 +375,10 @@ function renderBoard() {
     DOM.board.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
     DOM.board.style.maxWidth = `${maxW}px`;
     DOM.board.style.fontSize = fontSize;
+    
+    if (DOM.contentWrapper) {
+        DOM.contentWrapper.style.maxWidth = `${maxW}px`;
+    }
 
     currentTilesData.forEach((tileData, index) => {
         const tileWrapper = document.createElement('div');
@@ -365,7 +425,6 @@ function handleTileClick(e) {
         if (tileData.type === 'prize') {
             if (remainingPrizes[tileData.name] > 0) {
                 remainingPrizes[tileData.name]--;
-                updateStatusBoard();
             }
         }
         
@@ -398,37 +457,6 @@ function broadcastBoardState() {
 
 // --- [공통 화면 업데이트 함수] ---
 
-function updateStatusBoard() {
-    DOM.statusList.innerHTML = ''; 
-    let isAllEmpty = true; 
-    let hasKeys = false;   
-
-    for (const [name, count] of Object.entries(remainingPrizes)) {
-        hasKeys = true;
-        const itemSpan = document.createElement('span');
-        itemSpan.className = 'status-item';
-        
-        if (count === 0) {
-            itemSpan.classList.add('empty'); 
-        } else {
-            isAllEmpty = false;
-        }
-
-        itemSpan.innerHTML = `${name} <span class="count">${count}개</span>`;
-        DOM.statusList.appendChild(itemSpan);
-    }
-
-    if (!hasKeys) {
-        DOM.statusList.innerHTML = `<span class="status-empty">설정된 상품이 없습니다. 100% 꽝입니다!</span>`;
-    } else if (isAllEmpty) {
-        const finishMsg = document.createElement('span');
-        finishMsg.style.color = '#ff4d4d'; 
-        finishMsg.style.fontWeight = 'bold';
-        finishMsg.textContent = "🎉 모든 상품이 소진되었습니다!";
-        DOM.statusList.appendChild(finishMsg);
-    }
-}
-
 function resetBoard() {
     // 빈 상태방어
     if (!DOM.board.innerHTML.trim() || !isSettingComplete) {
@@ -454,6 +482,10 @@ window.updateObsUrl = function() {
     const bg = bgThumbnail ? bgThumbnail.getAttribute('data-bg') : 'none';
     const bxThumbnail = document.querySelector('.box-thumb.active');
     const bx = bxThumbnail ? bxThumbnail.getAttribute('data-box') : 'none';
+    const tnThumbnail = document.querySelector('.thumb-thumb.active');
+    const tn = tnThumbnail ? tnThumbnail.getAttribute('data-thumb') : 'none';
+    const cvThumbnail = document.querySelector('.cover-thumb.active');
+    const cv = cvThumbnail ? cvThumbnail.getAttribute('data-cover') : 'none';
     
     const r = [];
     document.querySelectorAll('#prize-list-container .prize-row').forEach(row => {
@@ -469,7 +501,7 @@ window.updateObsUrl = function() {
         if (n && str) f.push([n, str]);
     });
     
-    const config = { s: size, bg: bg, bx: bx, r: r, f: f };
+    const config = { s: size, bg: bg, bx: bx, tn: tn, cv: cv, r: r, f: f };
     const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
     
     const baseUrl = window.location.href.split('?')[0]; 
@@ -511,6 +543,20 @@ window.toggleSettingsPanel = function() {
     }
 };
 
+window.toggleGroup = function(headerEl) {
+    const group = headerEl.parentElement;
+    group.classList.toggle('collapsed');
+    
+    // 화살표 방향 회전은 CSS 클래스에서 정의된 transform을 따르며,
+    // 원할 경우 innerHTML 텍스트를 변경할 수도 있습니다.
+    const icon = headerEl.querySelector('.toggle-icon');
+    if (group.classList.contains('collapsed')) {
+        icon.innerHTML = '◀';
+    } else {
+        icon.innerHTML = '▼';
+    }
+};
+
 window.loadFromUrl = function(dataStr) {
     try {
         const jsonStr = decodeURIComponent(escape(atob(dataStr)));
@@ -529,6 +575,16 @@ window.loadFromUrl = function(dataStr) {
         if (bxThumb) {
             document.querySelectorAll('.box-thumb').forEach(t => t.classList.remove('active'));
             bxThumb.classList.add('active');
+        }
+        
+        const tnThumb = document.querySelector(`.thumb-thumb[data-thumb="${config.tn || 'none'}"]`);
+        if (tnThumb) {
+            changeTopThumbnail(tnThumb);
+        }
+
+        const cvThumb = document.querySelector(`.cover-thumb[data-cover="${config.cv || 'none'}"]`);
+        if (cvThumb) {
+            changeBoardCover(cvThumb);
         }
         
         const pCont = document.getElementById('prize-list-container');
@@ -578,16 +634,27 @@ window.onload = () => {
         if (defaultBgThumb) {
             changeBackground(defaultBgThumb);
         }
+        const defaultBxThumb = document.querySelector('.box-thumb[data-box="img/box_0002.png"]');
+        if (defaultBxThumb) {
+            changeBoxImage(defaultBxThumb);
+        }
+        const defaultTnThumb = document.querySelector('.thumb-thumb[data-thumb="img/thubnail_00.webp"]');
+        if (defaultTnThumb) {
+            changeTopThumbnail(defaultTnThumb);
+        }
+        const defaultCvThumb = document.querySelector('.cover-thumb[data-cover="img/bg_cover_00.webp"]');
+        if (defaultCvThumb) {
+            changeBoardCover(defaultCvThumb);
+        }
     }
 
     if (isObs) {
+        document.body.classList.add('obs-mode');
         toggleSettingsPanel(); 
         const bp = document.getElementById('broadcast-panel');
         if (bp) bp.style.paddingBottom = '0px'; 
         const ads = document.getElementById('adsense-container');
         if (ads) ads.style.display = 'none'; 
-        const statusBoard = document.querySelector('.status-board');
-        if (statusBoard) statusBoard.style.display = 'none';
         
         if (dataStr) {
             setTimeout(() => { applySettings(); }, 100);

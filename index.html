@@ -63,17 +63,19 @@
                 </div>
             </div>
 
-            <div class="setting-group">
-                <h3>3. 배경 이미지 (선택)</h3>
-                <div class="bg-thumbnails">
-                    <div class="bg-thumb active" data-bg="img/bg_0000.webp">bg_0000</div>
-                    <div class="bg-thumb" data-bg="img/bg_0001.webp">bg_0001</div>
-                    <div class="bg-thumb" data-bg="img/bg_0002.webp">bg_0002</div>
-                    <div class="bg-thumb" data-bg="img/bg_0003.webp">bg_0003</div>
-                    <div class="bg-thumb" data-bg="img/bg_0004.webp">bg_0004</div>
-                    <div class="bg-thumb" data-bg="none">초기화</div>
+            <div class="setting-group collapsible collapsed">
+                <h3 class="toggle-header" onclick="toggleGroup(this)">3. 전체 화면 배경 이미지 (선택) <span class="toggle-icon">▼</span></h3>
+                <div class="setting-content">
+                    <div class="bg-thumbnails">
+                        <div class="bg-thumb active" data-bg="img/bg_0000.webp">bg_0000</div>
+                        <div class="bg-thumb" data-bg="img/bg_0001.webp">bg_0001</div>
+                        <div class="bg-thumb" data-bg="img/bg_0002.webp">bg_0002</div>
+                        <div class="bg-thumb" data-bg="img/bg_0003.webp">bg_0003</div>
+                        <div class="bg-thumb" data-bg="img/bg_0004.webp">bg_0004</div>
+                        <div class="bg-thumb" data-bg="none">초기화</div>
+                    </div>
+                    <p class="help-text" style="margin-top:5px; font-size:11px;">※ img 폴더 내 배경 (bg_000x.webp) 파일을 불러옵니다.</p>
                 </div>
-                <p class="help-text" style="margin-top:5px; font-size:11px;">※ img 폴더 내 배경 (bg_000x.webp) 파일을 불러옵니다.</p>
             </div>
 
             <!-- 새로 추가된 [박스 이미지 커스텀 탭] -->
@@ -83,16 +85,40 @@
                     <!-- 이미지는 img/box_0000.png ~ img/box_0004.png 기준 -->
                     <div class="box-thumb" data-box="img/box_0000.png">box_0000</div>
                     <div class="box-thumb" data-box="img/box_0001.png">box_0001</div>
-                    <div class="box-thumb" data-box="img/box_0002.png">box_0002</div>
+                    <div class="box-thumb active" data-box="img/box_0002.png">box_0002</div>
                     <div class="box-thumb" data-box="img/box_0003.png">box_0003</div>
                     <div class="box-thumb" data-box="img/box_0004.png">box_0004</div>
-                    <div class="box-thumb active" data-box="none">기본 회색</div>
+                    <div class="box-thumb" data-box="none">기본 회색</div>
                 </div>
-                <p class="help-text" style="margin-top:5px; font-size:11px;">※ img 폴더 내 박스 (box_000x.png) 파일을 불러옵니다.</p>
+            </div>
+            <div class="setting-group collapsible collapsed">
+                <h3 class="toggle-header" onclick="toggleGroup(this)">5. 보드 배경 이미지 (선택) <span class="toggle-icon">▼</span></h3>
+                <div class="setting-content">
+                    <div class="cover-thumbnails">
+                        <div class="cover-thumb active" data-cover="img/bg_cover_00.webp">bg_cover_00</div>
+                        <div class="cover-thumb" data-cover="img/bg_cover_01.webp">bg_cover_01</div>
+                        <div class="cover-thumb" data-cover="img/bg_cover_02.webp">bg_cover_02</div>
+                        <div class="cover-thumb" data-cover="none">사용 안함</div>
+                    </div>
+                    <p class="help-text" style="margin-top:5px; font-size:11px;">※ img 폴더 내 (bg_cover_00.webp 등) 파일을 불러옵니다.</p>
+                </div>
+            </div>
+
+            <div class="setting-group collapsible collapsed">
+                <h3 class="toggle-header" onclick="toggleGroup(this)">6. 상단 타이틀 이미지 (선택) <span class="toggle-icon">▼</span></h3>
+                <div class="setting-content">
+                    <div class="thumb-thumbnails">
+                        <div class="thumb-thumb" data-thumb="img/thubnail_00.webp">thubnail_00</div>
+                        <div class="thumb-thumb" data-thumb="img/thubnail_01.webp">thubnail_01</div>
+                        <div class="thumb-thumb" data-thumb="img/thubnail_02.webp">thubnail_02</div>
+                        <div class="thumb-thumb active" data-thumb="none">사용 안함</div>
+                    </div>
+                    <p class="help-text" style="margin-top:5px; font-size:11px;">※ img 폴더 내 타이틀 (thubnail_00.webp 등) 파일을 불러옵니다.</p>
+                </div>
             </div>
 
             <div class="setting-group">
-                <h3>5. OBS 방송 송출 설정</h3>
+                <h3>7. OBS 방송 송출 설정</h3>
                 <p class="help-text">아래 주소를 복사하여 OBS 브라우저 소스의 'URL' 란에 붙여넣으세요. 방송 화면에는 설정 패널 없이 투명하게 출력됩니다.</p>
                 <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
                     <input type="text" id="obs-url-input" value="https://www.a1dea.kr/?obs=1" readonly style="flex: 1; padding: 8px; font-size: 0.85rem; background: #111; border: 1px solid #555; color: #00f2fe; border-radius: 4px; outline: none; cursor: pointer;" onclick="this.select()">
@@ -108,21 +134,22 @@
 
         <!-- [방송 송출 화면] - 메인 뽑기 영역 -->
         <main class="broadcast-panel" id="broadcast-panel">
-            <!-- 상태 현황판 -->
-            <header class="status-board">
-                <div class="status-title">🎁 남은 상품 현황</div>
-                <div id="status-list" class="status-list">
-                    <!-- Javascript가 동적으로 채워줌 -->
-                    <span class="status-empty">설정을 완료해주세요.</span>
-                </div>
-            </header>
 
-            <!-- 뽑기판 타일 영역 -->
-            <section class="board-container">
-                <div id="board" class="board">
-                    <!-- Javascript가 동적으로 타일을 생성함 -->
+            <div id="content-wrapper" class="content-wrapper">
+                <!-- 상단 타이틀 썸네일 영역 -->
+                <div class="top-thumbnail-wrapper">
+                    <img id="top-thumbnail-img" src="" alt="상단 타이틀" style="display: none;">
                 </div>
-            </section>
+
+                <!-- 뽑기판 타일 영역 -->
+                <section class="board-container">
+                    <div id="board" class="board">
+                        <!-- 타일들이 자바스크립트에 의해 추가됨 -->
+                    </div>
+                </section>
+            </div>
+
+            <!-- 하단 애드센스 고정 배너 -->
         </main>
     </div>
 

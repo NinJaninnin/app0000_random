@@ -74,6 +74,7 @@ function bindEvents() {
                 // 2. 남은 상품 수량 동기화
                 if (data.remaining) {
                     remainingPrizes = data.remaining;
+                    if(typeof updateTopPrizeSummary === 'function') updateTopPrizeSummary();
                 }
             } catch(err) {
                 console.error("동기화 파싱 에러", err);
@@ -184,6 +185,8 @@ function changeTopThumbnail(targetThumb) {
             imgEl.style.display = 'block';
         }
     }
+    
+    if(typeof updateTopPrizeSummary === 'function') updateTopPrizeSummary();
 }
 
 /**
@@ -330,6 +333,7 @@ function applySettings() {
     }
 
     renderBoard();
+    updateTopPrizeSummary();
 
     isSettingComplete = true;
     
@@ -425,6 +429,7 @@ function handleTileClick(e) {
         if (tileData.type === 'prize') {
             if (remainingPrizes[tileData.name] > 0) {
                 remainingPrizes[tileData.name]--;
+                updateTopPrizeSummary();
             }
         }
         
@@ -456,6 +461,29 @@ function broadcastBoardState() {
 }
 
 // --- [공통 화면 업데이트 함수] ---
+
+function updateTopPrizeSummary() {
+    const summaryContainer = document.getElementById('top-prize-summary');
+    const imgEl = document.getElementById('top-thumbnail-img');
+    if (!summaryContainer) return;
+
+    if (!imgEl || imgEl.style.display === 'none') {
+        summaryContainer.style.display = 'none';
+        return;
+    }
+    
+    summaryContainer.style.display = 'flex';
+    summaryContainer.innerHTML = '';
+    
+    let count = 0;
+    for (const [name, leftCount] of Object.entries(remainingPrizes)) {
+        if (count >= 3) break;
+        const span = document.createElement('span');
+        span.innerText = `${name} ${leftCount}개`;
+        summaryContainer.appendChild(span);
+        count++;
+    }
+}
 
 function resetBoard() {
     // 빈 상태방어
@@ -567,14 +595,12 @@ window.loadFromUrl = function(dataStr) {
         
         const bgThumb = document.querySelector(`.bg-thumb[data-bg="${config.bg}"]`);
         if (bgThumb) {
-            document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('active'));
-            bgThumb.classList.add('active');
+            changeBackground(bgThumb);
         }
         
         const bxThumb = document.querySelector(`.box-thumb[data-box="${config.bx}"]`);
         if (bxThumb) {
-            document.querySelectorAll('.box-thumb').forEach(t => t.classList.remove('active'));
-            bxThumb.classList.add('active');
+            changeBoxImage(bxThumb);
         }
         
         const tnThumb = document.querySelector(`.thumb-thumb[data-thumb="${config.tn || 'none'}"]`);
